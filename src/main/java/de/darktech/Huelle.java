@@ -88,4 +88,11 @@ public class Huelle {
     }
 
 
+    public Huelle merge (Huelle other){
+        this.I.addAll(other.I);
+        this.items.addAll(other.items);
+        return this;
+    }
+
+
 }

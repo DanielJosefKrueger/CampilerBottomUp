@@ -38,7 +38,7 @@ public class Start {
 
         ErweiterteGrammatik erweiterteGrammatik = new ErweiterteGrammatik(grammatik);
         SprungTabelle sprungTabelle = new SprungTabelle(erweiterteGrammatik);
-
+        System.out.println(sprungTabelle);
 
     }
 
