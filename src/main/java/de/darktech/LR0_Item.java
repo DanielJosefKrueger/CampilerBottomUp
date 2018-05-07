@@ -10,6 +10,12 @@ public class LR0_Item {
         this.position = position;
     }
 
+    public LR0_Item getDuplikateWithIncreasedPosition(){
+       return new LR0_Item(this.production, this.position+1);
+    }
+
+
+
 
     public Production getProduction() {
         return production;
@@ -25,7 +31,11 @@ public class LR0_Item {
     }
 
 
-    public char afterPosition(){
+    public Character afterPosition(){
+        if(this.production.getRight().length()-1<position){
+            return null;
+        }
+
         return production.getRight().charAt(position);
     }
 

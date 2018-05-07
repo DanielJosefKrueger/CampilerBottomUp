@@ -1,6 +1,7 @@
 package de.darktech;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -10,6 +11,7 @@ public class SprungTabelle {
 
     private final ArrayList<SprungTabelleEintrag> eintrage = new ArrayList<>();
     private final ArrayList<SprungTabelleEintrag> alreadyDone = new ArrayList<>();
+    Map<String,String> mapping = new HashMap<String, String>();
     private int counter =0;
 
     public SprungTabelle(ErweiterteGrammatik erweiterteGrammatik){
@@ -22,7 +24,6 @@ public class SprungTabelle {
         Huelle c0 = new Huelle(arg, grammatik);
         SprungTabelleEintrag eintrag = new SprungTabelleEintrag("C" + counter, c0, null, null);
         counter++;
-        System.out.println(eintrag);
         eintrage.add(eintrag);
         boolean changed = true;
 
@@ -43,11 +44,10 @@ public class SprungTabelle {
 
 
     private void expand(Grammatik grammatik, SprungTabelleEintrag eintrag) {
-
         if(alreadyDone.contains(eintrag)){
+            System.out.println("Already done");
             return;
         }
-
         Map<Character, List<LR0_Item>> symbolToLR0Ttems = eintrag.getHuelle().groupBySymbolAfterPosition();
         for(Map.Entry<Character, List<LR0_Item>> entry: symbolToLR0Ttems.entrySet()){
             List<LR0_Item> items = entry.getValue();
@@ -55,10 +55,18 @@ public class SprungTabelle {
                 throw new IllegalArgumentException("List may not be empty");
             }
 
+
+
             Huelle huelle = new Huelle(items, grammatik);
+
+
             SprungTabelleEintrag sprungTabelleEintrag = new SprungTabelleEintrag("C" + counter, huelle, eintrag, entry.getKey());
-            counter++;
-            eintrage.add(sprungTabelleEintrag);
+            mapping.put(eintrag.name+sprungTabelleEintrag.symbol, sprungTabelleEintrag.name);
+            if(!eintrage.contains(sprungTabelleEintrag)){
+                counter++;
+                eintrage.add(sprungTabelleEintrag);
+
+            }
         }
         alreadyDone.add(eintrag);
     }
@@ -104,19 +112,12 @@ public class SprungTabelle {
 
             SprungTabelleEintrag that = (SprungTabelleEintrag) o;
 
-            if (name != null ? !name.equals(that.name) : that.name != null) return false;
-            if (huelle != null ? !huelle.equals(that.huelle) : that.huelle != null) return false;
-            if (from != null ? !from.equals(that.from) : that.from != null) return false;
-            return symbol != null ? symbol.equals(that.symbol) : that.symbol == null;
+            return huelle != null ? huelle.equals(that.huelle) : that.huelle == null;
         }
 
         @Override
         public int hashCode() {
-            int result = name != null ? name.hashCode() : 0;
-            result = 31 * result + (huelle != null ? huelle.hashCode() : 0);
-            result = 31 * result + (from != null ? from.hashCode() : 0);
-            result = 31 * result + (symbol != null ? symbol.hashCode() : 0);
-            return result;
+            return huelle != null ? huelle.hashCode() : 0;
         }
     }
 
@@ -125,8 +126,10 @@ public class SprungTabelle {
         StringBuilder builder = new StringBuilder();
         builder.append("SprungTabellenInhtalt");
         for(SprungTabelleEintrag  eintrag :eintrage){
-            builder.append("\n Eintrag:").append(eintrag.name).append(" \nAusgehend von ").append(eintrag.from!=null?eintrag.name:"START")
-                    .append(" unter Symbol ").append(eintrag.symbol!=null?eintrag.symbol:"NONE");
+            builder.append("\nEintrag:").append(eintrag.name).append(" \nSprung(").append(eintrag.from!=null?eintrag.from.name:"START")
+                    .append(",").append(eintrag.symbol!=null?eintrag.symbol:"NONE").append(")");
+
+
             builder.append("\n").append(eintrag.huelle).append("\n\n");
 
         }

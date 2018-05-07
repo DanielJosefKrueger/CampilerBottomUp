@@ -30,7 +30,12 @@ public class Huelle {
         for(int i =0; i < items.size(); i++){
             LR0_Item lr0_item=   items.get(i);
 
-            List<Production> productions = grammatik.getProductionsForLeftSide("" + lr0_item.afterPosition());
+            Character afterPosition = lr0_item.afterPosition();
+            if(afterPosition==null){
+                continue; // we position is at the very end of the right side of the production
+            }
+
+            List<Production> productions = grammatik.getProductionsForLeftSide("" + afterPosition);
 
             int sizeBefore = items.size();
             for(Production production: productions){
@@ -77,22 +82,50 @@ public class Huelle {
         for(LR0_Item item: items){
             Character afterPosition = item.afterPosition();
             if(mapping.containsKey(afterPosition)){
-                mapping.get(afterPosition).add(item);
+                mapping.get(afterPosition).add(item.getDuplikateWithIncreasedPosition());
             }else{
                 ArrayList<LR0_Item> listing = new ArrayList<>();
-                listing.add(item);
+                listing.add(item.getDuplikateWithIncreasedPosition());
                 mapping.put(afterPosition, listing);
             }
         }
         return mapping;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Huelle huelle = (Huelle) o;
+
+
+        if(this.items.size()!=huelle.items.size()){
+            return false;
+        }
+
+        if(this.I.size()!=huelle.I.size()){
+            return false;
+        }
+
+
+        if (I != null ? !I.containsAll(huelle.I) : huelle.I != null) return false;
+        return items != null ? items.containsAll(huelle.items) : huelle.items == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = I != null ? I.hashCode() : 0;
+        result = 31 * result + (items != null ? items.hashCode() : 0);
+        return result;
+    }
 
     public Huelle merge (Huelle other){
         this.I.addAll(other.I);
         this.items.addAll(other.items);
         return this;
     }
+
 
 
 }
