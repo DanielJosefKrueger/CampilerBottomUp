@@ -6,15 +6,13 @@ public class LR0_Item {
 
 
     public LR0_Item(Production production, int position) {
+        if(position>production.getRight().length()){
+            throw new IllegalArgumentException("Position may not be greather than the length of the production");
+        }
+
         this.production = production;
         this.position = position;
     }
-
-    public LR0_Item getDuplikateWithIncreasedPosition(){
-       return new LR0_Item(this.production, this.position+1);
-    }
-
-
 
 
     public Production getProduction() {
@@ -27,16 +25,20 @@ public class LR0_Item {
 
 
     public String toString(){
-        return production.getLeft() + " ::= " +production.getRight().substring(0, position) + "." + production.getRight().substring(position,production.getRight().length());
+        if(afterPosition()==null){
+            return production.getLeft() + " ::= " +production.getRight().substring(0, position-1) + ".";
+        }else{
+            return production.getLeft() + " ::= " +production.getRight().substring(0, position) + "." + production.getRight().substring(position,production.getRight().length());
+        }
     }
 
 
     public Character afterPosition(){
-        if(this.production.getRight().length()-1<position){
+        if(position<production.getRight().length()){
+            return production.getRight().charAt(position);
+        }else{
             return null;
         }
-
-        return production.getRight().charAt(position);
     }
 
 
@@ -56,5 +58,10 @@ public class LR0_Item {
         int result = production != null ? production.hashCode() : 0;
         result = 31 * result + position;
         return result;
+    }
+
+
+    LR0_Item getItemWithIncreasedPosition(){
+        return new LR0_Item(production, this.position+1);
     }
 }

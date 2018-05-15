@@ -30,12 +30,7 @@ public class Huelle {
         for(int i =0; i < items.size(); i++){
             LR0_Item lr0_item=   items.get(i);
 
-            Character afterPosition = lr0_item.afterPosition();
-            if(afterPosition==null){
-                continue; // we position is at the very end of the right side of the production
-            }
-
-            List<Production> productions = grammatik.getProductionsForLeftSide("" + afterPosition);
+            List<Production> productions = grammatik.getProductionsForLeftSide("" + lr0_item.afterPosition());
 
             int sizeBefore = items.size();
             for(Production production: productions){
@@ -69,9 +64,23 @@ public class Huelle {
     }
 
     public String toString(){
-        String ret =  "Hülle (" + I + ") = " + "{";
+        String ret =  "Hülle (";
+
+        boolean first = true;
+
+        for(LR0_Item item:I){
+            if(!first){
+                ret+=" und ";
+            }
+            first = false;
+            ret+= item;
+        }
+
+
+
+        ret += ") = " + "{\n";
         for(LR0_Item lr0_item: items){
-            ret += lr0_item + "\n";
+            ret += "\t" + lr0_item + "\n";
         }
         return ret +"}";
     }
@@ -81,15 +90,26 @@ public class Huelle {
         Map<Character, List<LR0_Item>>  mapping = new HashMap<>();
         for(LR0_Item item: items){
             Character afterPosition = item.afterPosition();
+            if(afterPosition==null){
+                continue; // the position is at the very end
+            }
+
             if(mapping.containsKey(afterPosition)){
-                mapping.get(afterPosition).add(item.getDuplikateWithIncreasedPosition());
+                mapping.get(afterPosition).add(item);
             }else{
                 ArrayList<LR0_Item> listing = new ArrayList<>();
-                listing.add(item.getDuplikateWithIncreasedPosition());
+                listing.add(item);
                 mapping.put(afterPosition, listing);
             }
         }
         return mapping;
+    }
+
+
+    public Huelle merge (Huelle other){
+        this.I.addAll(other.I);
+        this.items.addAll(other.items);
+        return this;
     }
 
     @Override
@@ -99,33 +119,16 @@ public class Huelle {
 
         Huelle huelle = (Huelle) o;
 
-
-        if(this.items.size()!=huelle.items.size()){
-            return false;
-        }
-
-        if(this.I.size()!=huelle.I.size()){
-            return false;
-        }
-
-
-        if (I != null ? !I.containsAll(huelle.I) : huelle.I != null) return false;
-        return items != null ? items.containsAll(huelle.items) : huelle.items == null;
+        if (I != null ? !I.equals(huelle.I) : huelle.I != null) return false;
+        if (items != null ? !items.equals(huelle.items) : huelle.items != null) return false;
+        return grammatik != null ? grammatik.equals(huelle.grammatik) : huelle.grammatik == null;
     }
 
     @Override
     public int hashCode() {
         int result = I != null ? I.hashCode() : 0;
         result = 31 * result + (items != null ? items.hashCode() : 0);
+        result = 31 * result + (grammatik != null ? grammatik.hashCode() : 0);
         return result;
     }
-
-    public Huelle merge (Huelle other){
-        this.I.addAll(other.I);
-        this.items.addAll(other.items);
-        return this;
-    }
-
-
-
 }

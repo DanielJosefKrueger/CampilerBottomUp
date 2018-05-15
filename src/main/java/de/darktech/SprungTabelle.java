@@ -1,7 +1,6 @@
 package de.darktech;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -11,7 +10,6 @@ public class SprungTabelle {
 
     private final ArrayList<SprungTabelleEintrag> eintrage = new ArrayList<>();
     private final ArrayList<SprungTabelleEintrag> alreadyDone = new ArrayList<>();
-    Map<String,String> mapping = new HashMap<String, String>();
     private int counter =0;
 
     public SprungTabelle(ErweiterteGrammatik erweiterteGrammatik){
@@ -24,17 +22,23 @@ public class SprungTabelle {
         Huelle c0 = new Huelle(arg, grammatik);
         SprungTabelleEintrag eintrag = new SprungTabelleEintrag("C" + counter, c0, null, null);
         counter++;
+        System.out.println(eintrag);
         eintrage.add(eintrag);
         boolean changed = true;
 
 
         while(changed){
             int lengthOld = eintrage.size();
-            for(int i=0; i < eintrage.size(); i++){
+            for(int i=0; i < lengthOld; i++){
                 expand(grammatik, eintrage.get(i));
             }
             changed = lengthOld!=(eintrage.size());
+            //TODO remove
+            if(lengthOld>=20){
+                changed=false;
+            }
         }
+        System.out.println(this.toShortString());
 
 
     }
@@ -44,10 +48,11 @@ public class SprungTabelle {
 
 
     private void expand(Grammatik grammatik, SprungTabelleEintrag eintrag) {
+
         if(alreadyDone.contains(eintrag)){
-            System.out.println("Already done");
             return;
         }
+
         Map<Character, List<LR0_Item>> symbolToLR0Ttems = eintrag.getHuelle().groupBySymbolAfterPosition();
         for(Map.Entry<Character, List<LR0_Item>> entry: symbolToLR0Ttems.entrySet()){
             List<LR0_Item> items = entry.getValue();
@@ -56,19 +61,22 @@ public class SprungTabelle {
             }
 
 
+            //versetzen der POSITION nach dem übersprungenen symbol
+            List<LR0_Item> newItems = new ArrayList<>();
+            for(LR0_Item item: items){
+                newItems.add(item.getItemWithIncreasedPosition());
+            }
 
-            Huelle huelle = new Huelle(items, grammatik);
 
-
+            Huelle huelle = new Huelle(newItems, grammatik);
             SprungTabelleEintrag sprungTabelleEintrag = new SprungTabelleEintrag("C" + counter, huelle, eintrag, entry.getKey());
-            mapping.put(eintrag.name+sprungTabelleEintrag.symbol, sprungTabelleEintrag.name);
             if(!eintrage.contains(sprungTabelleEintrag)){
                 counter++;
                 eintrage.add(sprungTabelleEintrag);
-
+                System.out.println(sprungTabelleEintrag);
             }
+
         }
-        alreadyDone.add(eintrag);
     }
 
 
@@ -102,7 +110,13 @@ public class SprungTabelle {
         }
 
         public String toString(){
-            return "Name: " + name + "\n Inhalt: " + huelle;
+            if(from ==null){
+                return "Name: " + name + "\n" + huelle;
+            }else{
+                return "Name: " + name + "\n Inhalt: Sprung( "+ from.getName() + " , " + symbol + " ) = " + huelle;
+
+            }
+
         }
 
         @Override
@@ -112,12 +126,18 @@ public class SprungTabelle {
 
             SprungTabelleEintrag that = (SprungTabelleEintrag) o;
 
-            return huelle != null ? huelle.equals(that.huelle) : that.huelle == null;
+            if (huelle != null ? !huelle.equals(that.huelle) : that.huelle != null) return false;
+           // if (from != null ? !from.equals(that.from) : that.from != null) return false; //TODO überprüfen
+            return symbol != null ? symbol.equals(that.symbol) : that.symbol == null;
         }
 
         @Override
         public int hashCode() {
-            return huelle != null ? huelle.hashCode() : 0;
+            int result = name != null ? name.hashCode() : 0;
+            result = 31 * result + (huelle != null ? huelle.hashCode() : 0);
+            //result = 31 * result + (from != null ? from.hashCode() : 0);
+            result = 31 * result + (symbol != null ? symbol.hashCode() : 0);
+            return result;
         }
     }
 
@@ -126,11 +146,14 @@ public class SprungTabelle {
         StringBuilder builder = new StringBuilder();
         builder.append("SprungTabellenInhtalt");
         for(SprungTabelleEintrag  eintrag :eintrage){
-            builder.append("\nEintrag:").append(eintrag.name).append(" \nSprung(").append(eintrag.from!=null?eintrag.from.name:"START")
-                    .append(",").append(eintrag.symbol!=null?eintrag.symbol:"NONE").append(")");
-
-
-            builder.append("\n").append(eintrag.huelle).append("\n\n");
+            builder.append(eintrag.name).append(":");
+            if(eintrag.from==null){
+                builder.append(eintrag.huelle);
+            }else{
+                builder.append("Sprung(").append(eintrag.from.name).append(",\'").append(eintrag.symbol).append("\')= ");
+                builder.append(eintrag.huelle);
+            }
+            builder.append("\n\n");
 
         }
         return builder.toString();
@@ -138,6 +161,16 @@ public class SprungTabelle {
 
 
 
-
-
+    public String toShortString(){
+        StringBuilder builder = new StringBuilder();
+        builder.append("SprungTabellenInhtalt");
+        for(SprungTabelleEintrag  eintrag :eintrage){
+            if(eintrag.from==null){
+                builder.append(eintrag.name).append("\n");
+            }else{
+                builder.append(eintrag.name).append(" Sprung: ").append(eintrag.from.getName()).append(" ").append(eintrag.symbol).append("\n");
+            }
+        }
+        return builder.toString();
+    }
 }
